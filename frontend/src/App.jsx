@@ -55,21 +55,8 @@ export default function App() {
     }
   }
 
-  // Cargar datos iniciales cuando se autentica
   useEffect(() => {
     if (password) loadData(password);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [password]);
-
-  // Actualizar automáticamente cada 4 segundos
-  useEffect(() => {
-    if (!password) return;
-
-    const interval = setInterval(() => {
-      loadData(password);
-    }, 4000);
-
-    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [password]);
 
