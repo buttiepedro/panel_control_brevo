@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # MongoDB - Base de datos
+  mongodb:
+    image: mongo:7.0
+    container_name: panel-brevo-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: mongoadmin123
+      MONGO_INITDB_DATABASE: panel-brevo
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - panel-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Node.js + React - Panel Completo
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: panel-brevo-app
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      MONGODB_URI: mongodb://admin:mongoadmin123@mongodb:27017/panel-brevo?authSource=admin
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-tu_contraseña_aqui_123}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - panel-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb-data:
+    driver: local
+
+networks:
+  panel-network:
+    driver: bridge
