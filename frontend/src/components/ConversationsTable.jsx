@@ -10,13 +10,13 @@ function formatDate(value) {
 
 function StatusBadge({ conversation }) {
   if (!conversation.isSilenced) {
-    return <span className="status-badge active">Activo</span>;
+    return <span className="status-badge active">-</span>;
   }
 
   const isBot = conversation.silencedBy === 'bot';
   return (
     <span className={`status-badge ${isBot ? 'silenced-bot' : 'silenced-manual'}`}>
-      {isBot ? 'Bot' : 'Manual'}
+      {isBot ? 'Bot' : 'Asesor'}
     </span>
   );
 }
@@ -94,7 +94,7 @@ export default function ConversationsTable({
         <div className="table-header">
           <div className="col-contact">Contacto</div>
           <div className="col-date">Última msg</div>
-          <div className="col-status">Estado</div>
+          <div className="col-status">Silenciado por</div>
           <div className="col-actions">Acciones</div>
         </div>
         {paginatedItems.length > 0 ? (
@@ -119,14 +119,14 @@ export default function ConversationsTable({
                   className={`action-btn ${conversation.isSilenced ? 'unsilence' : 'silence'}`}
                   onClick={() => onToggleSilence(conversation)}
                 >
-                  {conversation.isSilenced ? '✓ Activar' : '🔇 Silenciar'}
+                  {conversation.isSilenced ? 'Activar' : 'Silenciar'}
                 </button>
                 <button
                   type="button"
                   className="action-btn delete"
                   onClick={() => onDelete(conversation)}
                 >
-                  🗑️ Eliminar
+                  Eliminar
                 </button>
               </div>
             </article>
