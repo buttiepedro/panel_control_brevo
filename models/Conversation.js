@@ -20,6 +20,14 @@ const conversationSchema = new mongoose.Schema({
     enum: ['manual', 'bot', null],
     default: null
   },
+  hipervinculo_conversacion: {
+    type: String,
+    default: null
+  },
+  botSilencedAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

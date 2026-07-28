@@ -100,15 +100,26 @@ router.get('/conversations', validatePassword, async (req, res) => {
 router.put('/conversations/:phoneNumber', validatePassword, async (req, res) => {
   try {
     const { phoneNumber } = req.params;
-    const { isSilenced, silencedBy } = req.body;
+    const { isSilenced, silencedBy, hipervinculo_conversacion } = req.body;
+
+    const updateData = {
+      updatedAt: new Date()
+    };
+
+    if (typeof isSilenced === 'boolean') {
+      const resolvedSilencedBy = isSilenced ? (silencedBy || 'manual') : null;
+      updateData.isSilenced = isSilenced;
+      updateData.silencedBy = resolvedSilencedBy;
+      updateData.botSilencedAt = isSilenced && resolvedSilencedBy === 'bot' ? new Date() : null;
+    }
+
+    if (typeof hipervinculo_conversacion !== 'undefined') {
+      updateData.hipervinculo_conversacion = hipervinculo_conversacion || null;
+    }
     
     const conversation = await Conversation.findOneAndUpdate(
       { phoneNumber },
-      {
-        isSilenced,
-        silencedBy: isSilenced ? silencedBy : null,
-        updatedAt: new Date()
-      },
+      updateData,
       { new: true }
     );
     

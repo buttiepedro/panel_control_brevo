@@ -24,6 +24,7 @@ function StatusBadge({ conversation }) {
 export default function ConversationsTable({
   conversations,
   onToggleSilence,
+  onMarkContacted,
   onDelete,
   loading,
 }) {
@@ -41,6 +42,19 @@ export default function ConversationsTable({
     );
 
     result.sort((a, b) => {
+      const aIsBotSilenced = a.isSilenced && a.silencedBy === 'bot';
+      const bIsBotSilenced = b.isSilenced && b.silencedBy === 'bot';
+
+      if (aIsBotSilenced !== bIsBotSilenced) {
+        return aIsBotSilenced ? -1 : 1;
+      }
+
+      if (aIsBotSilenced && bIsBotSilenced) {
+        const botDateA = new Date(a.botSilencedAt || a.updatedAt || a.lastMessageAt || 0);
+        const botDateB = new Date(b.botSilencedAt || b.updatedAt || b.lastMessageAt || 0);
+        return botDateB - botDateA;
+      }
+
       const dateA = new Date(a.lastMessageAt || 0);
       const dateB = new Date(b.lastMessageAt || 0);
       return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
@@ -99,7 +113,12 @@ export default function ConversationsTable({
         </div>
         {paginatedItems.length > 0 ? (
           paginatedItems.map((conversation) => (
-            <article key={conversation.phoneNumber} className="conversation-item">
+            <article
+              key={conversation.phoneNumber}
+              className={`conversation-item ${
+                conversation.isSilenced && conversation.silencedBy === 'bot' ? 'conversation-item-bot-silenced' : ''
+              }`}
+            >
               <div className="col-contact">
                 <h3>{conversation.whatsappName || 'Sin nombre'}</h3>
                 <p>{conversation.phoneNumber}</p>
@@ -114,6 +133,15 @@ export default function ConversationsTable({
               </div>
 
               <div className="col-actions">
+                {conversation.isSilenced && conversation.silencedBy === 'bot' && (
+                  <button
+                    type="button"
+                    className="action-btn contacted"
+                    onClick={() => onMarkContacted(conversation)}
+                  >
+                    Contactado
+                  </button>
+                )}
                 <button
                   type="button"
                   className={`action-btn ${conversation.isSilenced ? 'unsilence' : 'silence'}`}

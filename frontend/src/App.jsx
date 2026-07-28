@@ -120,6 +120,23 @@ export default function App() {
     }
   }
 
+  async function handleMarkContacted(conversation) {
+    try {
+      await updateConversation(
+        conversation.phoneNumber,
+        {
+          isSilenced: true,
+          silencedBy: 'manual',
+        },
+        password
+      );
+      pushToast('Marcada como contactado', 'success');
+      await loadData();
+    } catch (error) {
+      pushToast(error.message || 'No se pudo marcar como contactado', 'error');
+    }
+  }
+
   return (
     <div className="app-root" data-theme="dark">
       {!password ? (
@@ -133,6 +150,7 @@ export default function App() {
               <ConversationsTable
                 conversations={conversations}
                 onToggleSilence={handleToggleSilence}
+                onMarkContacted={handleMarkContacted}
                 onDelete={handleDelete}
                 loading={loading}
               />
