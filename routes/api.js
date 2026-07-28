@@ -31,7 +31,7 @@ const validatePassword = (req, res, next) => {
 // ═══════════════════════════════════════════════════════════════════════
 router.post('/message', async (req, res) => {
   try {
-    const { phoneNumber, whatsappName } = req.body;
+    const { phoneNumber, whatsappName, hipervinculo_conversacion } = req.body;
     
     if (!phoneNumber) {
       return res.status(400).json({ error: 'phoneNumber es requerido' });
@@ -47,7 +47,8 @@ router.post('/message', async (req, res) => {
       console.log(`✨ Creando nuevo contacto: ${phoneNumber}`);
       conversation = new Conversation({
         phoneNumber,
-        whatsappName: whatsappName || null
+        whatsappName: whatsappName || null,
+        hipervinculo_conversacion: hipervinculo_conversacion || null
       });
       created = true;
     } else {
@@ -57,6 +58,10 @@ router.post('/message', async (req, res) => {
       // Actualizar nombre si viene en el request y no tenía uno
       if (whatsappName && !conversation.whatsappName) {
         conversation.whatsappName = whatsappName;
+      }
+
+      if (hipervinculo_conversacion && !conversation.hipervinculo_conversacion) {
+        conversation.hipervinculo_conversacion = hipervinculo_conversacion;
       }
     }
     
@@ -100,7 +105,7 @@ router.get('/conversations', validatePassword, async (req, res) => {
 router.put('/conversations/:phoneNumber', validatePassword, async (req, res) => {
   try {
     const { phoneNumber } = req.params;
-    const { isSilenced, silencedBy, hipervinculo_conversacion } = req.body;
+    const { isSilenced, silencedBy } = req.body;
 
     const updateData = {
       updatedAt: new Date()
@@ -113,10 +118,6 @@ router.put('/conversations/:phoneNumber', validatePassword, async (req, res) => 
       updateData.botSilencedAt = isSilenced && resolvedSilencedBy === 'bot' ? new Date() : null;
     }
 
-    if (typeof hipervinculo_conversacion !== 'undefined') {
-      updateData.hipervinculo_conversacion = hipervinculo_conversacion || null;
-    }
-    
     const conversation = await Conversation.findOneAndUpdate(
       { phoneNumber },
       updateData,

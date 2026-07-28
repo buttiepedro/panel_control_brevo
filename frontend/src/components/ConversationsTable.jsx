@@ -109,6 +109,7 @@ export default function ConversationsTable({
           <div className="col-contact">Contacto</div>
           <div className="col-date">Última msg</div>
           <div className="col-status">Silenciado por</div>
+          <div className="col-link">Hipervínculo</div>
           <div className="col-actions">Acciones</div>
         </div>
         {paginatedItems.length > 0 ? (
@@ -130,6 +131,21 @@ export default function ConversationsTable({
 
               <div className="col-status">
                 <StatusBadge conversation={conversation} />
+              </div>
+
+              <div className="col-link">
+                {conversation.hipervinculo_conversacion ? (
+                  <a
+                    href={conversation.hipervinculo_conversacion}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="conversation-link"
+                  >
+                    Abrir
+                  </a>
+                ) : (
+                  <span className="empty-link">-</span>
+                )}
               </div>
 
               <div className="col-actions">

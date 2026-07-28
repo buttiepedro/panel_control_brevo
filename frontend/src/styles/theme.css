@@ -217,7 +217,7 @@ body {
 
 .table-header {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1.2fr 1.8fr;
+  grid-template-columns: 2fr 1.4fr 1.1fr 1fr 1.8fr;
   gap: 12px;
   padding: 14px 18px;
   font-size: 11px;
@@ -229,7 +229,7 @@ body {
   background: var(--surface-2);
 }
 
-.col-contact, .col-date, .col-status, .col-actions {
+.col-contact, .col-date, .col-status, .col-link, .col-actions {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -237,7 +237,7 @@ body {
 
 .conversation-item {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1.2fr 1.8fr;
+  grid-template-columns: 2fr 1.4fr 1.1fr 1fr 1.8fr;
   gap: 12px;
   align-items: center;
   padding: 14px 18px;
@@ -283,6 +283,31 @@ body {
 .col-status {
   display: flex;
   justify-content: center;
+}
+
+.col-link {
+  display: flex;
+  justify-content: center;
+}
+
+.conversation-link {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-dim);
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+.conversation-link:hover {
+  text-decoration: underline;
+}
+
+.empty-link {
+  color: var(--text-tertiary);
+  font-size: 12px;
 }
 
 .col-actions {
@@ -594,6 +619,10 @@ body {
   }
 
   .col-status {
+    justify-content: flex-start;
+  }
+
+  .col-link {
     justify-content: flex-start;
   }
 
