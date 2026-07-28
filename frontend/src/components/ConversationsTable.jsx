@@ -107,7 +107,7 @@ export default function ConversationsTable({
       <div className="conversations-list elev">
         <div className="table-header">
           <div className="col-contact">Contacto</div>
-          <div className="col-date">Última msg</div>
+          <div className="col-date">ÚLTIMO MSG</div>
           <div className="col-status">Silenciado por</div>
           <div className="col-link">Hipervínculo</div>
           <div className="col-actions">Acciones</div>
