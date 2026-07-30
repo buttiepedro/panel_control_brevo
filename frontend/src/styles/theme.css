@@ -217,7 +217,7 @@ body {
 
 .table-header {
   display: grid;
-  grid-template-columns: 2fr 1.4fr 1.1fr 1fr 1.8fr;
+  grid-template-columns: 1.9fr 1.3fr 1fr 0.9fr 0.9fr 1.8fr;
   gap: 12px;
   padding: 14px 18px;
   font-size: 11px;
@@ -229,7 +229,7 @@ body {
   background: var(--surface-2);
 }
 
-.col-contact, .col-date, .col-status, .col-link, .col-actions {
+.col-contact, .col-date, .col-status, .col-desilenced, .col-link, .col-actions {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -237,7 +237,7 @@ body {
 
 .conversation-item {
   display: grid;
-  grid-template-columns: 2fr 1.4fr 1.1fr 1fr 1.8fr;
+  grid-template-columns: 1.9fr 1.3fr 1fr 0.9fr 0.9fr 1.8fr;
   gap: 12px;
   align-items: center;
   padding: 14px 18px;
@@ -281,6 +281,11 @@ body {
 }
 
 .col-status {
+  display: flex;
+  justify-content: center;
+}
+
+.col-desilenced {
   display: flex;
   justify-content: center;
 }
@@ -387,6 +392,16 @@ body {
 .status-badge.active {
   background: rgba(16, 185, 129, 0.18);
   color: var(--success);
+}
+
+.status-badge.inactive {
+  background: rgba(122, 122, 122, 0.18);
+  color: var(--text-tertiary);
+}
+
+.status-badge.desilenced {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
 }
 
 .status-badge.silenced-manual {
@@ -619,6 +634,10 @@ body {
   }
 
   .col-status {
+    justify-content: flex-start;
+  }
+
+  .col-desilenced {
     justify-content: flex-start;
   }
 

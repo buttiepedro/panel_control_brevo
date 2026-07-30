@@ -21,6 +21,14 @@ function StatusBadge({ conversation }) {
   );
 }
 
+function DesilencedBadge({ conversation }) {
+  if (!conversation.isDesilenced) {
+    return <span className="status-badge inactive">-</span>;
+  }
+
+  return <span className="status-badge desilenced">Si</span>;
+}
+
 export default function ConversationsTable({
   conversations,
   onToggleSilence,
@@ -109,6 +117,7 @@ export default function ConversationsTable({
           <div className="col-contact">Contacto</div>
           <div className="col-date">ÚLTIMO MSG</div>
           <div className="col-status">Silenciado por</div>
+          <div className="col-desilenced">Reactivada</div>
           <div className="col-link">Hipervínculo</div>
           <div className="col-actions">Acciones</div>
         </div>
@@ -131,6 +140,10 @@ export default function ConversationsTable({
 
               <div className="col-status">
                 <StatusBadge conversation={conversation} />
+              </div>
+
+              <div className="col-desilenced">
+                <DesilencedBadge conversation={conversation} />
               </div>
 
               <div className="col-link">

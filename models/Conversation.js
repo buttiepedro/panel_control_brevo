@@ -15,6 +15,10 @@ const conversationSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isDesilenced: {
+    type: Boolean,
+    default: false
+  },
   silencedBy: {
     type: String,
     enum: ['manual', 'bot', null],

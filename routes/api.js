@@ -26,6 +26,7 @@ const validatePassword = (req, res, next) => {
 //   "exists": boolean,        // ¿El número ya existía?
 //   "created": boolean,       // ¿Se creó un nuevo registro?
 //   "isSilenced": boolean,    // ⚠️ CRÍTICO: ¿Está silenciado? n8n usa esto
+//   "isDesilenced": boolean,  // ✅ true si un agente lo volvió a activar
 //   "silencedBy": string      // "manual" | "bot" | null
 // }
 // ═══════════════════════════════════════════════════════════════════════
@@ -75,6 +76,7 @@ router.post('/message', async (req, res) => {
       exists: !created,              // true si ya existía
       created,                       // true si fue creado ahora
       isSilenced: conversation.isSilenced,  // ← CRÍTICO PARA n8n
+      isDesilenced: conversation.isDesilenced, // true si fue reactivada por agente
       silencedBy: conversation.silencedBy   // quién lo silenciló
     };
     
@@ -116,6 +118,7 @@ router.put('/conversations/:phoneNumber', validatePassword, async (req, res) => 
       updateData.isSilenced = isSilenced;
       updateData.silencedBy = resolvedSilencedBy;
       updateData.botSilencedAt = isSilenced && resolvedSilencedBy === 'bot' ? new Date() : null;
+      updateData.isDesilenced = !isSilenced;
     }
 
     const conversation = await Conversation.findOneAndUpdate(
