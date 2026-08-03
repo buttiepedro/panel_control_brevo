@@ -37,17 +37,33 @@ export default function ConversationsTable({
   loading,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [silenceFilter, setSilenceFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const silenceFilterLabel =
+    silenceFilter === 'bot' ? 'silenciadas por bot' : silenceFilter === 'agent' ? 'silenciadas por agente' : 'todas';
+
   // Filtrar y ordenar
   const filteredAndSorted = useMemo(() => {
-    let result = conversations.filter(
-      (conv) =>
-        (conv.whatsappName && conv.whatsappName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        conv.phoneNumber.includes(searchTerm)
-    );
+    const normalizedSearch = searchTerm.toLowerCase();
+
+    let result = conversations.filter((conv) => {
+      const matchesSearch =
+        (conv.whatsappName && conv.whatsappName.toLowerCase().includes(normalizedSearch)) ||
+        conv.phoneNumber.includes(searchTerm);
+
+      const isBotSilenced = conv.isSilenced && conv.silencedBy === 'bot';
+      const isAgentSilenced = conv.isSilenced && conv.silencedBy !== 'bot';
+
+      const matchesSilenceFilter =
+        silenceFilter === 'all' ||
+        (silenceFilter === 'bot' && isBotSilenced) ||
+        (silenceFilter === 'agent' && isAgentSilenced);
+
+      return matchesSearch && matchesSilenceFilter;
+    });
 
     result.sort((a, b) => {
       const aIsBotSilenced = a.isSilenced && a.silencedBy === 'bot';
@@ -69,7 +85,7 @@ export default function ConversationsTable({
     });
 
     return result;
-  }, [conversations, searchTerm, sortOrder]);
+  }, [conversations, searchTerm, silenceFilter, sortOrder]);
 
   // Paginación
   const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage);
@@ -98,6 +114,19 @@ export default function ConversationsTable({
           }}
           className="search-input"
         />
+        <select
+          value={silenceFilter}
+          onChange={(e) => {
+            setSilenceFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="filter-select"
+          aria-label="Filtrar conversaciones silenciadas"
+        >
+          <option value="all">Todas</option>
+          <option value="bot">Silenciadas por bot</option>
+          <option value="agent">Silenciadas por agente</option>
+        </select>
         <button
           type="button"
           className="sort-btn"
@@ -107,7 +136,7 @@ export default function ConversationsTable({
           📅 {sortOrder === 'desc' ? 'Recientes' : 'Antiguos'}
         </button>
         <span className="result-count">
-          {filteredAndSorted.length} {filteredAndSorted.length === 1 ? 'registro' : 'registros'}
+          {filteredAndSorted.length} {filteredAndSorted.length === 1 ? 'registro' : 'registros'} · {silenceFilterLabel}
         </span>
       </div>
 
@@ -189,7 +218,9 @@ export default function ConversationsTable({
             </article>
           ))
         ) : (
-          <div className="no-results">Sin resultados para "{searchTerm}"</div>
+          <div className="no-results">
+            Sin resultados para "{searchTerm}" {silenceFilter !== 'all' ? `en ${silenceFilterLabel}` : ''}
+          </div>
         )}
       </div>
 
