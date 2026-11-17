@@ -1,5 +1,6 @@
 const express = require('express');
 const Conversation = require('../models/Conversation');
+const { applyConversationState } = require('./conversationState');
 const router = express.Router();
 
 // Middleware para validar contraseña
@@ -32,7 +33,15 @@ const validatePassword = (req, res, next) => {
 // ═══════════════════════════════════════════════════════════════════════
 router.post('/message', async (req, res) => {
   try {
-    const { phoneNumber, whatsappName, hipervinculo_conversacion } = req.body;
+    const {
+      phoneNumber,
+      whatsappName,
+      hipervinculo_conversacion,
+      lastUserMessage,
+      derivationReason,
+      isSilenced,
+      silencedBy
+    } = req.body;
     
     if (!phoneNumber) {
       return res.status(400).json({ error: 'phoneNumber es requerido' });
@@ -49,35 +58,46 @@ router.post('/message', async (req, res) => {
       conversation = new Conversation({
         phoneNumber,
         whatsappName: whatsappName || null,
-        hipervinculo_conversacion: hipervinculo_conversacion || null
+        hipervinculo_conversacion: hipervinculo_conversacion || null,
+        lastUserMessage: lastUserMessage || null,
+        derivationReason: derivationReason || null
       });
       created = true;
     } else {
       // ✅ EXISTENTE: El número ya estaba registrado
       console.log(`🔍 Contacto existe: ${phoneNumber}`);
       
-      // Actualizar nombre si viene en el request y no tenía uno
       if (whatsappName && !conversation.whatsappName) {
         conversation.whatsappName = whatsappName;
       }
 
-      if (hipervinculo_conversacion && !conversation.hipervinculo_conversacion) {
+      if (hipervinculo_conversacion) {
         conversation.hipervinculo_conversacion = hipervinculo_conversacion;
       }
+
+      if (lastUserMessage) {
+        conversation.lastUserMessage = lastUserMessage;
+      }
+
+      if (derivationReason) {
+        conversation.derivationReason = derivationReason;
+      }
     }
+
+    const now = new Date();
+    applyConversationState(conversation, { isSilenced, silencedBy }, now);
     
     // Actualizar timestamp de último mensaje
-    conversation.lastMessageAt = new Date();
+    conversation.lastMessageAt = now;
     await conversation.save();
     
-    // ⚠️ IMPORTANTE: Retornar el estado de silenciado
-    // n8n checkeará este campo para decidir si continuar o abortar el flujo
     const response = {
       exists: !created,              // true si ya existía
       created,                       // true si fue creado ahora
       isSilenced: conversation.isSilenced,  // ← CRÍTICO PARA n8n
       isDesilenced: conversation.isDesilenced, // true si fue reactivada por agente
-      silencedBy: conversation.silencedBy   // quién lo silenciló
+      silencedBy: conversation.silencedBy,   // quién lo silenció
+      contactStatus: conversation.contactStatus
     };
     
     console.log(`📤 Respuesta: ${JSON.stringify(response)}`);
@@ -103,33 +123,22 @@ router.get('/conversations', validatePassword, async (req, res) => {
   }
 });
 
-// PUT /api/conversations/:phoneNumber - Silencia/dessilencia conversación
+// PUT /api/conversations/:phoneNumber - Silencia/dessilencia conversación o actualiza estado
 router.put('/conversations/:phoneNumber', validatePassword, async (req, res) => {
   try {
     const { phoneNumber } = req.params;
-    const { isSilenced, silencedBy } = req.body;
+    const { isSilenced, silencedBy, contactStatus, derivationReason, lastUserMessage } = req.body;
 
-    const updateData = {
-      updatedAt: new Date()
-    };
-
-    if (typeof isSilenced === 'boolean') {
-      const resolvedSilencedBy = isSilenced ? (silencedBy || 'manual') : null;
-      updateData.isSilenced = isSilenced;
-      updateData.silencedBy = resolvedSilencedBy;
-      updateData.botSilencedAt = isSilenced && resolvedSilencedBy === 'bot' ? new Date() : null;
-      updateData.isDesilenced = !isSilenced;
-    }
-
-    const conversation = await Conversation.findOneAndUpdate(
-      { phoneNumber },
-      updateData,
-      { new: true }
-    );
+    const conversation = await Conversation.findOne({ phoneNumber });
     
     if (!conversation) {
       return res.status(404).json({ error: 'Conversación no encontrada' });
     }
+
+    if (derivationReason !== undefined) conversation.derivationReason = derivationReason;
+    if (lastUserMessage !== undefined) conversation.lastUserMessage = lastUserMessage;
+    applyConversationState(conversation, { isSilenced, silencedBy, contactStatus });
+    await conversation.save();
     
     res.json(conversation);
   } catch (error) {

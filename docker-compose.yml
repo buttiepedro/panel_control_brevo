@@ -44,7 +44,7 @@ services:
       - panel-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) process.exit(1)})"]
       interval: 10s
       timeout: 5s
       retries: 5

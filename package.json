@@ -4,6 +4,7 @@
   "description": "Panel de control para gestionar conversaciones de Brevo",
   "main": "server.js",
   "scripts": {
+    "test": "node --test",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "dev:frontend": "npm --prefix frontend run dev",
