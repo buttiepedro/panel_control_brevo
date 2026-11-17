@@ -1,6 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Modal from './Modal';
-import { isPendingContact, isSameDay, wasDerivedOn } from '../lib/conversations';
+import { getConversationStatus, isPendingContact, isSameDay, isWithinDateRange, wasDerivedOn } from '../lib/conversations';
+
+const statuses = {
+  pending: { label: 'Derivada · Sin contactar', badgeClass: 'badge-pending' },
+  manual: { label: 'Asesor manual', badgeClass: 'badge-manual' },
+  contacted: { label: 'Contactado', badgeClass: 'badge-contacted' },
+  bot: { label: 'En bot', badgeClass: 'badge-bot-active' }
+};
 
 function formatDate(value) {
   if (!value) return '-';
@@ -34,19 +41,8 @@ function timeAgo(value) {
 }
 
 function StatusBadge({ conversation }) {
-  if (isPendingContact(conversation)) {
-    return <span className="status-badge badge-pending">Derivada · Sin contactar</span>;
-  }
-
-  if (conversation.contactStatus === 'contacted') {
-    return <span className="status-badge badge-contacted">Contactado</span>;
-  }
-
-  if (!conversation.isSilenced) {
-    return <span className="status-badge badge-bot-active">En bot</span>;
-  }
-
-  return <span className="status-badge badge-manual">Asesor manual</span>;
+  const status = statuses[getConversationStatus(conversation)];
+  return <span className={`status-badge ${status.badgeClass}`}>{status.label}</span>;
 }
 
 export default function ConversationsTable({
@@ -56,17 +52,22 @@ export default function ConversationsTable({
   onDelete,
   loading,
   activeQuickFilter,
-  onSelectQuickFilter,
   resetFiltersKey
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [detailConversation, setDetailConversation] = useState(null);
   const itemsPerPage = 12;
 
   const now = new Date();
+  const showDateRange = activeQuickFilter !== 'derived_today' && activeQuickFilter !== 'today';
+  const dateError = showDateRange && dateFrom && dateTo && dateFrom > dateTo
+    ? 'La fecha desde no puede ser posterior a la fecha hasta.'
+    : '';
 
   useEffect(() => {
     setCurrentPage(1);
@@ -76,9 +77,11 @@ export default function ConversationsTable({
     setCurrentPage(1);
     setSearchTerm('');
     setStatusFilter('all');
+    setDateFrom('');
+    setDateTo('');
   }, [resetFiltersKey]);
 
-  // Filtrado compuesto (buscador + filtro rápido de tarjetas + selector desplegable)
+  // El estado usa la misma clasificación que las etiquetas de las filas.
   const filteredAndSorted = useMemo(() => {
     const normalizedSearch = searchTerm.toLowerCase();
 
@@ -90,10 +93,11 @@ export default function ConversationsTable({
         (conv.lastUserMessage && conv.lastUserMessage.toLowerCase().includes(normalizedSearch));
 
       if (!matchesSearch) return false;
+      if (showDateRange && !isWithinDateRange(conv.lastMessageAt, dateFrom, dateTo)) return false;
+      if (statusFilter !== 'all' && getConversationStatus(conv) !== statusFilter) return false;
 
       const pending = isPendingContact(conv);
 
-      // 1. Filtro rápido de tarjetas
       if (activeQuickFilter === 'pending' && !pending) return false;
       if (activeQuickFilter === 'derived_today' && !wasDerivedOn(conv, now)) {
         return false;
@@ -101,12 +105,6 @@ export default function ConversationsTable({
       if (activeQuickFilter === 'today' && !isSameDay(conv.lastMessageAt || conv.createdAt, now)) {
         return false;
       }
-
-      // 2. Filtro selector manual
-      if (statusFilter === 'pending' && !pending) return false;
-      if (statusFilter === 'contacted' && conv.contactStatus !== 'contacted') return false;
-      if (statusFilter === 'active' && conv.isSilenced) return false;
-      if (statusFilter === 'silenced' && !conv.isSilenced) return false;
 
       return true;
     });
@@ -133,7 +131,7 @@ export default function ConversationsTable({
     });
 
     return result;
-  }, [conversations, searchTerm, statusFilter, activeQuickFilter, sortOrder, now]);
+  }, [conversations, searchTerm, statusFilter, activeQuickFilter, sortOrder, dateFrom, dateTo, showDateRange, now]);
 
   const totalPages = Math.ceil(filteredAndSorted.length / itemsPerPage);
   const page = Math.min(currentPage, Math.max(1, totalPages));
@@ -145,52 +143,9 @@ export default function ConversationsTable({
 
   return (
     <section className="conversations-section">
-      {/* Controles de búsqueda, filtros rápidos y orden */}
+      {/* Controles de búsqueda, fechas y orden */}
       <div className="table-controls elev">
-        <div className="quick-filter-tabs">
-          <button
-            type="button"
-            className={`tab-pill ${activeQuickFilter === 'pending' ? 'active alert-pill' : ''}`}
-            onClick={() => {
-              onSelectQuickFilter('pending');
-              setCurrentPage(1);
-            }}
-          >
-            Pendientes de contacto
-          </button>
-          <button
-            type="button"
-            className={`tab-pill ${activeQuickFilter === 'derived_today' ? 'active' : ''}`}
-            onClick={() => {
-              onSelectQuickFilter('derived_today');
-              setCurrentPage(1);
-            }}
-          >
-            Derivadas hoy
-          </button>
-          <button
-            type="button"
-            className={`tab-pill ${activeQuickFilter === 'today' ? 'active' : ''}`}
-            onClick={() => {
-              onSelectQuickFilter('today');
-              setCurrentPage(1);
-            }}
-          >
-            Todo hoy
-          </button>
-          <button
-            type="button"
-            className={`tab-pill ${activeQuickFilter === 'all' ? 'active' : ''}`}
-            onClick={() => {
-              onSelectQuickFilter('all');
-              setCurrentPage(1);
-            }}
-          >
-            Ver Todas
-          </button>
-        </div>
-
-        <div className="search-and-select">
+        <div className="search-controls">
           <input
             type="text"
             placeholder="Buscar por contacto, mensaje o motivo..."
@@ -202,20 +157,21 @@ export default function ConversationsTable({
             }}
             className="search-input"
           />
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="filter-select"
-          >
-            <option value="all">Estado: Todos</option>
-            <option value="pending">Solo pendientes</option>
-            <option value="contacted">Ya contactados</option>
-            <option value="active">En bot (activas)</option>
-            <option value="silenced">Silenciadas</option>
-          </select>
+          <label className="status-filter">
+            <span>Estado</span>
+            <select
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="all">Todos los estados</option>
+              {Object.entries(statuses).map(([value, status]) => (
+                <option key={value} value={value}>{status.label}</option>
+              ))}
+            </select>
+          </label>
           <button
             type="button"
             className="sort-btn"
@@ -225,6 +181,57 @@ export default function ConversationsTable({
             {sortOrder === 'desc' ? 'Recientes' : 'Antiguos'}
           </button>
         </div>
+
+        {showDateRange && (
+          <fieldset className="date-filters" aria-describedby={dateError ? 'date-filter-error' : 'date-filter-help'}>
+            <legend>Fecha del último mensaje</legend>
+            <div className="date-filter-controls">
+              <label className="date-filter">
+                <span>Desde</span>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  max={dateTo || undefined}
+                  aria-invalid={Boolean(dateError)}
+                  onChange={(event) => {
+                    setDateFrom(event.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </label>
+              <label className="date-filter">
+                <span>Hasta</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom || undefined}
+                  aria-invalid={Boolean(dateError)}
+                  onChange={(event) => {
+                    setDateTo(event.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </label>
+              {(dateFrom || dateTo) && (
+                <button
+                  type="button"
+                  className="header-btn"
+                  onClick={() => {
+                    setDateFrom('');
+                    setDateTo('');
+                    setCurrentPage(1);
+                  }}
+                >
+                  Limpiar fechas
+                </button>
+              )}
+            </div>
+            <p id="date-filter-help" className="date-filter-help">
+              Incluye ambos días y se combina con el KPI, el estado y la búsqueda.
+            </p>
+            {dateError && <p id="date-filter-error" className="date-filter-error" role="alert">{dateError}</p>}
+          </fieldset>
+        )}
 
         <span className="result-count">
           {filteredAndSorted.length} {filteredAndSorted.length === 1 ? 'resultado' : 'resultados'}
@@ -354,7 +361,9 @@ export default function ConversationsTable({
           })
         ) : (
           <div className="no-results">
-            {activeQuickFilter === 'pending'
+            {dateError
+              ? 'Corregí el rango de fechas para ver las conversaciones.'
+              : activeQuickFilter === 'pending' && statusFilter === 'all' && !searchTerm && !dateFrom && !dateTo
               ? '¡Excelente! No hay consultas derivadas pendientes de contactar.'
               : 'No se encontraron conversaciones con los filtros aplicados.'}
           </div>

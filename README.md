@@ -280,6 +280,17 @@ Acceder con la contraseña configurada en `.env`:
 - **Estadísticas**: Total, activas y silenciadas
 - **Ver detalle**: Abre el motivo de derivación/resumen y el último mensaje completos,
   conservando saltos de línea, en un modal con scroll para textos largos.
+- **Filtros**: Los KPI superiores seleccionan la vista, sin una segunda fila de
+  botones duplicados. “Desde” y “Hasta” filtran por la fecha del último mensaje
+  en la zona horaria del navegador, incluyendo ambos días. Se puede completar
+  un solo límite o limpiar las fechas; el rango se combina con el KPI, la búsqueda
+  y el filtro de estado. Este último coincide con las cuatro etiquetas visibles:
+  “Derivada · Sin contactar”, “Asesor manual”, “Contactado” y “En bot”, o permite
+  mostrar todos los estados. Para consultar un rango histórico completo, elegir
+  “Total histórico”. Los KPI mantienen sus totales generales, no los del rango.
+  En “Derivadas hoy” y “Consultas de hoy” el rango se oculta y no se aplica,
+  porque esas vistas ya fijan el día. Al volver a pendientes o al historial,
+  se recupera el rango que se había seleccionado.
 
 Las eliminaciones requieren confirmación en un modal integrado. Se puede cancelar
 con el botón o con Escape antes del envío; durante la eliminación se bloquean

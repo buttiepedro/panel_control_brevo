@@ -215,7 +215,6 @@ export default function App() {
                     onDelete={setDeleteTarget}
                     loading={loading}
                     activeQuickFilter={quickFilter}
-                    onSelectQuickFilter={setQuickFilter}
                     resetFiltersKey={pendingViewKey}
                   />
                 </>

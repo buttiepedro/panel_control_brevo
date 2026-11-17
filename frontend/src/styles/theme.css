@@ -354,46 +354,7 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.quick-filter-tabs {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  width: 100%;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-}
-
-.tab-pill {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  border-radius: var(--radius-full);
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  font-family: var(--font-ui);
-  cursor: pointer;
-  transition: all var(--dur-press) var(--ease-out);
-}
-
-.tab-pill:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.tab-pill.active {
-  background: var(--color-primary);
-  color: var(--on-primary);
-  border-color: var(--color-primary);
-}
-
-.tab-pill.active.alert-pill {
-  background: var(--color-danger);
-  color: #fff;
-  border-color: var(--color-danger);
-}
-
-.search-and-select {
+.search-controls {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -419,23 +380,6 @@ body {
 }
 
 .search-input:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
-}
-
-.filter-select {
-  padding: 8px 12px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-size: 13px;
-  font-family: var(--font-ui);
-  outline: none;
-  cursor: pointer;
-}
-
-.filter-select:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
 }
@@ -1204,7 +1148,6 @@ body {
 
 .header-btn:focus-visible,
 .sort-btn:focus-visible,
-.tab-pill:focus-visible,
 .action-btn:focus-visible,
 .pagination-btn:focus-visible,
 .conversation-link-btn:focus-visible,
@@ -1303,36 +1246,21 @@ body {
   box-shadow: none;
 }
 
-.quick-filter-tabs {
+.search-controls {
   gap: 8px;
-  padding-bottom: 14px;
+  min-width: 0;
+  align-items: flex-end;
 }
 
-.tab-pill {
-  min-height: 38px;
-  padding: 8px 13px;
-  border-color: transparent;
-  background: transparent;
-}
-
-.tab-pill.active,
-.tab-pill.active.alert-pill {
-  background: var(--bg-selected);
-  color: var(--color-primary);
-  border-color: transparent;
-}
-
-.tab-pill.active.alert-pill {
-  color: var(--color-danger);
-}
-
-.search-and-select {
-  gap: 8px;
+.status-filter {
+  display: flex;
+  flex: 0 1 240px;
+  flex-direction: column;
+  gap: 6px;
   min-width: 0;
 }
 
-.search-input,
-.filter-select {
+.search-input {
   min-height: 42px;
   min-width: 0;
   padding: 10px 13px;
@@ -1344,11 +1272,6 @@ body {
   flex: 1 1 300px;
 }
 
-.filter-select {
-  flex: 0 1 auto;
-  max-width: 100%;
-}
-
 .sort-btn {
   padding: 8px 13px;
   background: transparent;
@@ -1358,6 +1281,79 @@ body {
 .result-count {
   align-self: flex-end;
   margin-left: 0;
+}
+
+.date-filters {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.date-filters legend,
+.date-filter > span,
+.status-filter > span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.date-filters legend {
+  margin-bottom: 10px;
+}
+
+.date-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.date-filter {
+  display: flex;
+  flex: 0 1 190px;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.date-filter input,
+.status-filter select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+}
+
+.date-filter input:focus-visible,
+.status-filter select:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.date-filter input[aria-invalid="true"] {
+  border-color: var(--color-error-text);
+}
+
+.date-filter-controls .header-btn {
+  min-height: 42px;
+}
+
+.date-filter-help,
+.date-filter-error {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.date-filter-error {
+  color: var(--color-error-text);
 }
 
 .conversations-list {
@@ -1599,27 +1595,24 @@ body {
     font-size: 11px;
   }
 
-  .quick-filter-tabs {
-    gap: 5px;
-  }
-
-  .tab-pill {
-    flex: 1 1 auto;
-    max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-
-  .search-and-select {
+  .search-controls {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
   }
 
   .search-input,
-  .filter-select,
   .sort-btn {
     width: 100%;
     max-width: 100%;
+  }
+
+  .date-filter {
+    flex: 1 1 140px;
+  }
+
+  .date-filter input,
+  .status-filter select {
+    font-size: 16px;
   }
 
   .conversation-item {
